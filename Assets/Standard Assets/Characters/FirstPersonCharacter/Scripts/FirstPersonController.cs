@@ -41,6 +41,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_NextStep;
         private bool m_Jumping;
         private AudioSource m_AudioSource;
+        public GameObject bulletPrefab;
+        public Transform firePoint;
+        public float fireRate = 0.5f;
+        public float nextFireTime = 0f;
 
         // Use this for initialization
         private void Start()
@@ -59,7 +63,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
         // Update is called once per frame
-        private void Update()
+         void Update()
         {
             RotateView();
             // the jump state needs to read here to make sure it is not missed
@@ -81,6 +85,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             m_PreviouslyGrounded = m_CharacterController.isGrounded;
+            if (Input.GetButton("Fire1") && Time.time >= nextFireTime)
+            {
+                // Spawn a bullet at the fire point
+                Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+
+                // Set the next fire time
+                nextFireTime = Time.time + fireRate;
+            }
         }
 
 
