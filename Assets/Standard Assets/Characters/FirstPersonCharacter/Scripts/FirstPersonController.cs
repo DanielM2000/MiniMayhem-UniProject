@@ -43,8 +43,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private AudioSource m_AudioSource;
         public GameObject bulletPrefab;
         public Transform firePoint;
+        public Camera playerCamera;
         public float fireRate = 0.5f;
         public float nextFireTime = 0f;
+        public bool canShoot = true;
+       
 
         // Use this for initialization
         private void Start()
@@ -63,10 +66,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
         // Update is called once per frame
-         void Update()
+        void Update()
         {
+            m_MouseLook.UpdateCursorLock();
+
             RotateView();
             // the jump state needs to read here to make sure it is not missed
+
             if (!m_Jump)
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
@@ -85,15 +91,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             m_PreviouslyGrounded = m_CharacterController.isGrounded;
-            if (Input.GetButton("Fire1") && Time.time >= nextFireTime)
+            if (Input.GetButton("Fire1") && Time.time >= nextFireTime && canShoot)
             {
-                // Spawn a bullet at the fire point
-                Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+                // Calculate the direction in which to shoot the bullet based on the player's camera
+                Vector3 shootDirection = playerCamera.transform.forward;
+
+                // Spawn a bullet at the fire point with the calculated direction
+                Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(shootDirection));
 
                 // Set the next fire time
                 nextFireTime = Time.time + fireRate;
             }
+ 
         }
+
 
 
         private void PlayLandingSound()
@@ -248,7 +259,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void RotateView()
         {
-            m_MouseLook.LookRotation (transform, m_Camera.transform);
+            // get the mouse inputs
+            float yRot = Input.GetAxisRaw("Mouse X") * m_MouseLook.XSensitivity;
+            float xRot = Input.GetAxisRaw("Mouse Y") * m_MouseLook.YSensitivity;
+
+            // apply the rotations to the character and camera
+            transform.Rotate(0, yRot, 0);
+            m_YRotation += xRot;
+            m_YRotation = Mathf.Clamp(m_YRotation, -90f, 90f);
+            m_Camera.transform.localRotation = Quaternion.Euler(-m_YRotation, 0, 0);
         }
 
 

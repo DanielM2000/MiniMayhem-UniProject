@@ -6,14 +6,19 @@ using UnityEngine.UI;
 [System.Serializable]
 public class WaveConfig
 {
+    [Space(50)]
     public float delayBeforeStarting;
     public int numberOfEnemies;
     public GameObject[] enemyPrefabs;
+    public LineRenderer path;
 }
 
 public class EnemySpawner : MonoBehaviour
 {
+    
+    
     public List<WaveConfig> waveConfigs;
+    [Space(200)]
     public float spawnInterval = 1.0f;
     public float timeBetweenWaves = 10.0f;
 
@@ -26,6 +31,7 @@ public class EnemySpawner : MonoBehaviour
     private bool gameStarted = false;
 
     public Transform target;
+    
 
     void Start()
     {
@@ -54,7 +60,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    void SpawnEnemy()
+    public void SpawnEnemy()
     {
         if (enemiesRemaining > 0 && isSpawning)
         {
@@ -62,7 +68,15 @@ public class EnemySpawner : MonoBehaviour
             GameObject[] currentWavePrefabs = waveConfigs[currentWave].enemyPrefabs;
             GameObject enemyPrefab = currentWavePrefabs[Random.Range(0, currentWavePrefabs.Length)];
             GameObject enemy = Instantiate(enemyPrefab, transform.position, Quaternion.identity);
-            enemy.GetComponent<EnemyAI>().target = target;
+
+            // Set the path for the enemy to follow
+            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+            enemyAI.SetPath(waveConfigs[currentWave].path);
+            enemyAI.target = target;
+
+            // Set the enemy's initial position to the first point on the path
+            enemy.transform.position = waveConfigs[currentWave].path.GetPosition(0);
+
             enemiesRemaining--;
             enemiesRemainingText.text = "Enemies Remaining: " + enemiesRemaining.ToString();
         }
@@ -92,6 +106,8 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+
+
     void OnGUI()
     {
         if (!gameStarted)
@@ -108,6 +124,3 @@ public class EnemySpawner : MonoBehaviour
         enemiesRemainingText.text = "Enemies Remaining: " + enemiesRemaining.ToString();
     }
 }
-
-
-
